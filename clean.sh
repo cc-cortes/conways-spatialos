@@ -4,7 +4,7 @@ set -e -x
 
 cd "$(dirname "$0")"
 
-WORKER_DIRS=(LifeWorker)
+WORKER_DIRS=(LifeWorker SnapshotGenerator)
 BUILD_DIR="$(pwd)"
 DOWNLOAD_DIR="$(pwd)/build"
 

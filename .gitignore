@@ -15,3 +15,5 @@ OtherWorkers/DiceWorker/src/improbable/
 /HelloWorker/src/obj/x64/Debug
 /HelloWorker/src/obj/x64/DebugLinux
 /LifeWorker/bin
+/LifeWorker/src/obj/x64
+/SnapshotGenerator/src/bin/x64/DebugLinux

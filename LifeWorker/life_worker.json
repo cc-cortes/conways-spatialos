@@ -20,7 +20,7 @@
         "localBuildDirectory": "bin/x64/ReleaseLinux",
         "command": "mono",
         "arguments": [
-          "HelloWorker.exe",
+          "LifeWorker.exe",
           "${IMPROBABLE_RECEPTIONIST_HOST}",
           "${IMPROBABLE_RECEPTIONIST_PORT}",
           "${IMPROBABLE_WORKER_ID}"
@@ -33,7 +33,7 @@
         "command": "mono",
         "arguments": [
           "--arch=64",
-          "HelloWorker.exe",
+          "LifeWorker.exe",
           "${IMPROBABLE_RECEPTIONIST_HOST}",
           "${IMPROBABLE_RECEPTIONIST_PORT}",
           "${IMPROBABLE_WORKER_ID}"
@@ -43,7 +43,7 @@
         "localBuildDirectory": "bin/x64/ReleaseLinux",
         "command": "mono",
         "arguments": [
-          "HelloWorker.exe",
+          "LifeWorker.exe",
           "${IMPROBABLE_RECEPTIONIST_HOST}",
           "${IMPROBABLE_RECEPTIONIST_PORT}",
           "${IMPROBABLE_WORKER_ID}"

@@ -2,7 +2,7 @@
 
 using System;
 using System.Reflection;
-using Improbable.Worker;
+//using Improbable.Worker;
 
 namespace Demo
 {
@@ -19,7 +19,7 @@ namespace Demo
 
         static int Main(string[] arguments)
         {
-            Action printUsage = () =>
+           /* Action printUsage = () =>
             {
                 Console.WriteLine("Usage: " + WorkerType + " <hostname> <port> <worker_id>");
                 Console.WriteLine("Connects to the deployment.");
@@ -79,11 +79,11 @@ namespace Demo
                         }
                     }
                 }
-            }
+            }*/
 
             return 0;
         }
-
+        /*
         private static Connection ConnectWorker(string[] arguments)
         {
             string hostname = arguments[0];
@@ -97,6 +97,6 @@ namespace Demo
             {
                 return future.Get();
             }
-        }
+        }*/
     }
 }
