@@ -1,7 +1,7 @@
-// Copyright (c) Improbable Worlds Ltd, All Rights Reserved
+
 package demo;
 
 component Life {
-  id = 101;
-  bool is_Alive;
+  id = 111;
+  bool is_alive = 1;
 }

@@ -1,6 +1,6 @@
 {
   "configurationVersion": "0.1",
-  "projectName": "your_project_name_here",
+  "projectName": "beta_snake_mountain_900",
   "schemaDescriptor": "./schema/bin/schema.descriptor",
   "serverWorkers": [
     "../LifeWorker/life_worker.json"

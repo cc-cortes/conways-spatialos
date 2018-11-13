@@ -26,13 +26,13 @@ namespace Demo
             var id = 0;
 
             //Create a 10x10 grid of entities
-            for (int i = 0; i < 10; i++)
+            for (double x = 0; x < 100; x++)
             {
-                for(int j = 0; j < 10; j++)
+                for(double y = 0; y < 100; y++)
                 {
                     id++;
                     var entityId = new EntityId(id + 1);
-                    var entity = createEntity(workerType, i, j);
+                    var entity = createEntity(workerType, x, y);
                     var error = sos.WriteEntity(entityId, entity);
                     if (error.HasValue)
                     {
@@ -79,8 +79,8 @@ namespace Demo
             // Needed for the entity to be persisted in snapshots.
             entity.Add(new Persistence.Data());
             entity.Add(new Metadata.Data(entityType));
-            entity.Add(new Position.Data(new Coordinates(X, Y, 0)));
-            entity.Add(new Demo.Life.Data(bool false)); //Need to add Life component
+            entity.Add(new Position.Data(new Coordinates(X, 0, Y)));
+            entity.Add(new Life.Data(false));
             return entity;
         }
     }

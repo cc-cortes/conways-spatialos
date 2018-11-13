@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+abort()
+{
+    echo >&2 '
+***************
+*** ABORTED ***
+***************
+'
+    echo "An error occurred. Exiting..." >&2
+    read -p "Press [Enter] key to exit..."
+}
+
+trap 'abort' 0
+
 set -e -x
 
 cd "$(dirname "$0")"
@@ -103,3 +116,5 @@ mkdir -p "${BUILD_DIR}/SpatialOS/schema/bin"
 rm -r "${DOWNLOAD_DIR}/generated_protos"
 
 echo "Build complete"
+
+trap : 0
