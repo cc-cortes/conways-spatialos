@@ -1,6 +1,0 @@
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\Debug\GeneratedCode.csprojResolveAssemblyReference.cache
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\generated_code\x64\Debug\GeneratedCode.dll
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\generated_code\x64\Debug\GeneratedCode.pdb
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\generated_code\x64\Debug\Improbable.WorkerSdkCsharp.dll
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\Debug\GeneratedCode.dll
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\Debug\GeneratedCode.pdb

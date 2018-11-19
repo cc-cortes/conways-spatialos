@@ -1,1 +1,0 @@
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\ReleaseMacOS\CsharpWorker.csprojResolveAssemblyReference.cache
