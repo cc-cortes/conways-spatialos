@@ -1,0 +1,7 @@
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\DebugWindows\CoreSdkDll.dll
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\DebugWindows\SnapshotGenerator.exe
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\DebugWindows\GeneratedCode.dll
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\DebugWindows\Improbable.WorkerSdkCsharp.dll
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\DebugWindows\GeneratedCode.pdb
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\DebugWindows\CsharpWorker.csprojResolveAssemblyReference.cache
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\DebugWindows\SnapshotGenerator.exe

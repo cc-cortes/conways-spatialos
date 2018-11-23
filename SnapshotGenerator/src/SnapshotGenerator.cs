@@ -24,15 +24,18 @@ namespace Demo
             SnapshotOutputStream sos = new SnapshotOutputStream(snapshotPath);
 
             var id = 0;
+            var maxRowCount = 100;
+            var maxColumnCount = 100;
 
             //Create a 10x10 grid of entities
-            for (double x = 0; x < 100; x++)
+            for (double y = 0; y < maxRowCount; y++) //Starts at 0
             {
-                for(double y = 0; y < 100; y++)
+                for(double x = 0; x < maxColumnCount; x++) //starts at 0
                 {
-                    id++;
+                    id++; //starts at 1
                     var entityId = new EntityId(id + 1);
-                    var entity = createEntity(workerType, x, y);
+                    Improbable.Collections.List<EntityId> nList = getNeighbors(x, maxColumnCount, y, maxRowCount, id);
+                    var entity = createEntity(workerType, x, y, false, 0, false, 0, nList);
                     var error = sos.WriteEntity(entityId, entity);
                     if (error.HasValue)
                     {
@@ -48,7 +51,72 @@ namespace Demo
             return 0;
         }
 
-        private static Entity createEntity(string workerType, double X, double Y)
+        private static Improbable.Collections.List<EntityId> getNeighbors(double x, int maxColumnCount, double y, int maxRowCount, int id)
+        {
+            Improbable.Collections.List<EntityId> neighbors = new Improbable.Collections.List<EntityId>();
+
+            int maxX = maxColumnCount - 1;
+            int maxY = maxRowCount - 1;
+            long nId;
+
+            //Top-Left
+            if( (x > 0) & (y < maxY))
+            {
+                nId = (long)((y + 1) * maxColumnCount + ((x + 1) - 1));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Top
+            if(y < maxY)
+            {
+                nId = (long)((y + 1) * maxColumnCount + (x + 1));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Top-Right
+            if((y < maxY) & (x < maxX))
+            {
+                nId = (long)((y + 1) * maxColumnCount + (x + 2));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Right
+            if(x < maxX)
+            {
+                neighbors.Add(new EntityId(id + 1));
+            }
+
+            //Bottom-Right
+            if((x < maxX) & (y > 0))
+            {
+                nId = (long)((y - 1) * maxColumnCount + (x + 1 + 1));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Bottom
+            if(y > 0)
+            {
+                nId = (long)((y - 1) * maxColumnCount + (x + 1));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Bottom-Left
+            if((y > 0) & (x > 0))
+            {
+                nId = (long)((y - 1) * maxColumnCount + ((x + 1) - 1));
+                neighbors.Add(new EntityId(nId));
+            }
+
+            //Left
+            if(x > 0)
+            {
+                neighbors.Add(new EntityId(id - 1));
+            }
+
+            return neighbors;
+        }
+
+        private static Entity createEntity(string workerType, double X, double Y, bool currentAlive, UInt64 currentSequenceId, bool previousAlive, UInt64 previousSequenceId, Improbable.Collections.List<EntityId> neighborsList)
         {
             var entity = new Entity();
             const string entityType = "Cell";
@@ -80,7 +148,8 @@ namespace Demo
             entity.Add(new Persistence.Data());
             entity.Add(new Metadata.Data(entityType));
             entity.Add(new Position.Data(new Coordinates(X, 0, Y)));
-            entity.Add(new Life.Data(false));
+            entity.Add(new Life.Data(currentAlive, currentSequenceId, previousAlive, previousSequenceId));
+            entity.Add(new Neighbors.Data(neighborsList));
             return entity;
         }
     }

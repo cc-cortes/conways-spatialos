@@ -3,5 +3,15 @@ package demo;
 
 component Life {
   id = 111;
-  bool is_alive = 1;
+
+  bool cur_is_alive = 1;
+  uint64 cur_sequence_id = 2;
+
+  bool prev_is_alive = 3;
+  uint64 prev_sequence_id = 4;
+}
+
+component Neighbors {
+  id = 112;
+  list<EntityId> neighbor_list = 1;
 }
