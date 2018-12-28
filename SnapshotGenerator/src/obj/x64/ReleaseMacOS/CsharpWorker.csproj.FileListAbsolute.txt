@@ -1,7 +1,0 @@
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseMacOS\libCoreSdkDll.dylib
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseMacOS\SnapshotGenerator.exe
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseMacOS\GeneratedCode.dll
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseMacOS\Improbable.WorkerSdkCsharp.dll
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseMacOS\GeneratedCode.pdb
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\ReleaseMacOS\CsharpWorker.csprojResolveAssemblyReference.cache
-C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\ReleaseMacOS\SnapshotGenerator.exe

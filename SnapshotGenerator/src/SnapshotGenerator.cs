@@ -27,13 +27,13 @@ namespace Demo
             var maxRowCount = 100;
             var maxColumnCount = 100;
 
-            //Create a 10x10 grid of entities
+            //Create a grid of entities
             for (double y = 0; y < maxRowCount; y++) //Starts at 0
             {
-                for(double x = 0; x < maxColumnCount; x++) //starts at 0
+                for (double x = 0; x < maxColumnCount; x++) //starts at 0
                 {
                     id++; //starts at 1
-                    var entityId = new EntityId(id + 1);
+                    var entityId = new EntityId(id);
                     Improbable.Collections.List<EntityId> nList = getNeighbors(x, maxColumnCount, y, maxRowCount, id);
                     var entity = createEntity(workerType, x, y, false, 0, false, 0, nList);
                     var error = sos.WriteEntity(entityId, entity);
@@ -46,7 +46,6 @@ namespace Demo
 
             // Writes the end of snapshot header and releases the resources of the SnapshotOutputStream.
             sos.Dispose();
-
 
             return 0;
         }

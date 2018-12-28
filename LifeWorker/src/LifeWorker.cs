@@ -98,7 +98,41 @@ namespace Demo
         /// <param name="view"></param>
         private static void UpdateEntities(View view)
         {
+            //Iterate through every entity in the view
+            foreach(Entity e in view.Entities.Values)
+            {
+                UpdateEntity(e);
+            }
+        }
 
+        /// <summary>
+        /// Update an entity based on the rules of Conways Game of Life
+        /// </summary>
+        /// <param name="e">The entity to update</param>
+        private static void UpdateEntity(Entity e)
+        {
+            //GetAvailableNeighborCount... What if you don't have all neighbors?
+            int availableNeighborCount = 0;
+
+            //GetLiveNeighborCount 
+            int liveNeighborCount = 0;
+
+            //Get Current life state of the entity
+            bool isAlive = false;
+
+            // If current state = is Alive && (If LiveNeighborCount < 2 OR LiveNeighborCount > 3) Then Update to next state = dead
+            if(isAlive && (liveNeighborCount < 2 || liveNeighborCount > 3))
+            {
+                //set prev state and count id to the current state/id
+                //Set new current state
+            }
+            //If current state = Dead(is not alive) &&  If LiveNeighborCount == 3 then Update to next state = alive
+            else if ((!isAlive) && (liveNeighborCount == 3))
+            {
+
+            }
+
+            
         }
     }
 }
