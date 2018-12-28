@@ -3,6 +3,8 @@
 using System;
 using System.Reflection;
 using Improbable.Worker;
+using Improbable.Collections;
+using Improbable;
 
 namespace Demo
 {
@@ -50,12 +52,9 @@ namespace Demo
                         }
                     });
 
-
                     RunEventLoop(connection, view);
-                }
-                
+                }    
             }
-
             return 0;
         }
 
@@ -98,41 +97,129 @@ namespace Demo
         /// <param name="view"></param>
         private static void UpdateEntities(View view)
         {
+            int liveNeighborCount = 0;
+
             //Iterate through every entity in the view
             foreach(Entity e in view.Entities.Values)
             {
-                UpdateEntity(e);
+                //Only do this update if this worker has write access to the entity
+                
+
+                //Get the number of live neighbors
+                liveNeighborCount = GetLiveNeighbors(e, view);
+                //Update the entity based on the live neighbor count
+                UpdateEntity(e, liveNeighborCount);
             }
+        }
+
+        /// <summary>
+        /// Get a count of live neighbors by running through the list of neighbors from the entity
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="view"></param>
+        /// <returns></returns>
+        private static int GetLiveNeighbors(Entity e, View view)
+        {
+            Entity neighbor;
+            bool hasNeighbor = false;
+            int liveNeighbors = 0;
+
+            //Get the current time sequence id
+            ulong seqId = GetLatestSequenceId(e);
+
+            //Get the list of neighbor entity ids
+            var option = e.Get<Neighbors>();
+            var neighbors = option.Value;
+            var neighborsData = neighbors.Get();
+            NeighborsData nd = neighborsData.Value;
+
+            //Go through the entity IDs of the neighbors
+            foreach(Improbable.EntityId neighborId in nd.neighborList)
+            {
+                //Get the life value for an entityID
+                hasNeighbor = view.Entities.TryGetValue(neighborId, out neighbor);
+                if(!hasNeighbor)
+                {
+                    //How to get the neighbor if it isn't in the view?
+                    //This should only be for outer edge items, which this worker should only have read and not write, right?
+                }
+                
+                if(IsCellAlive(seqId, neighbor))
+                {
+                    //What if that cell isn't at that time sequence ID yet?
+                    liveNeighbors++;
+                }
+            }
+
+            return liveNeighbors;
+        }
+
+        /// <summary>
+        /// Get the latest time-based sequence id from an entity
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        private static ulong GetLatestSequenceId(Entity e)
+        {
+            var option = e.Get<Life>();
+            var life = option.Value;
+            var lifeData = life.Get();
+            LifeData ld = lifeData.Value;
+            return ld.curSequenceId;
+        }
+
+        /// <summary>
+        /// Determine if a cell is alive for the provided time sequence ID
+        /// </summary>
+        /// <param name="sequenceId"></param>
+        /// <param name="cellEntity"></param>
+        /// <returns></returns>
+        private static bool IsCellAlive(ulong sequenceId, Entity cellEntity)
+        {
+            bool isAlive = false;
+
+            var option = cellEntity.Get<Life>();
+            var life = option.Value;
+            var lifeData = life.Get();
+            LifeData ld = lifeData.Value;
+
+            if(ld.curSequenceId == sequenceId)
+            {
+                isAlive = ld.curIsAlive;
+            }
+            else if(ld.prevSequenceId == sequenceId)
+            {
+                isAlive = ld.prevIsAlive;
+            }
+
+            return isAlive;
         }
 
         /// <summary>
         /// Update an entity based on the rules of Conways Game of Life
         /// </summary>
         /// <param name="e">The entity to update</param>
-        private static void UpdateEntity(Entity e)
+        private static void UpdateEntity(Entity e, int LiveNeighborCount)
         {
-            //GetAvailableNeighborCount... What if you don't have all neighbors?
-            int availableNeighborCount = 0;
-
-            //GetLiveNeighborCount 
-            int liveNeighborCount = 0;
-
             //Get Current life state of the entity
             bool isAlive = false;
+            bool isAliveNextState = false;
 
             // If current state = is Alive && (If LiveNeighborCount < 2 OR LiveNeighborCount > 3) Then Update to next state = dead
-            if(isAlive && (liveNeighborCount < 2 || liveNeighborCount > 3))
+            if(isAlive && (LiveNeighborCount < 2 || LiveNeighborCount > 3))
             {
-                //set prev state and count id to the current state/id
-                //Set new current state
+                isAliveNextState = false;
             }
             //If current state = Dead(is not alive) &&  If LiveNeighborCount == 3 then Update to next state = alive
-            else if ((!isAlive) && (liveNeighborCount == 3))
+            else if ((!isAlive) && (LiveNeighborCount == 3))
             {
-
+                isAliveNextState = true;
             }
 
-            
+            //set prev state and count id to the current state/id
+            //Set new current state
+
+
         }
     }
 }

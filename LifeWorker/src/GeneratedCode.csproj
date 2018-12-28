@@ -43,7 +43,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="improbable\generated\**\*.cs" />
+	<Compile Include="improbable\generated\demo\Life.cs" />
+    <Compile Include="improbable\generated\demo\LifeData.cs" />
+    <Compile Include="improbable\generated\demo\Neighbors.cs" />
+    <Compile Include="improbable\generated\demo\NeighborsData.cs" />
+    <Compile Include="improbable\generated\improbable\Coordinates.cs" />
+    <Compile Include="improbable\generated\improbable\EntityAcl.cs" />
+    <Compile Include="improbable\generated\improbable\EntityAclData.cs" />
+    <Compile Include="improbable\generated\improbable\Metadata.cs" />
+    <Compile Include="improbable\generated\improbable\MetadataData.cs" />
+    <Compile Include="improbable\generated\improbable\Persistence.cs" />
+    <Compile Include="improbable\generated\improbable\PersistenceData.cs" />
+    <Compile Include="improbable\generated\improbable\Position.cs" />
+    <Compile Include="improbable\generated\improbable\PositionData.cs" />
+    <Compile Include="improbable\generated\improbable\Vector3d.cs" />
+    <Compile Include="improbable\generated\improbable\Vector3f.cs" />
+    <Compile Include="improbable\generated\improbable\WorkerAttributeSet.cs" />
+    <Compile Include="improbable\generated\improbable\WorkerRequirementSet.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
