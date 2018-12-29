@@ -58,6 +58,13 @@ namespace Demo
             return 0;
         }
 
+        /// <summary>
+        /// Connect the Worker to the Runtime
+        /// </summary>
+        /// <param name="workerId"></param>
+        /// <param name="hostName"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
         private static Connection ConnectWorker(string workerId, string hostName, ushort port)
         {
             // https://docs.improbable.io/reference/13.3/csharpsdk/using/connecting
@@ -72,6 +79,11 @@ namespace Demo
             }
         }
 
+        /// <summary>
+        /// Run a time-based tick loop to change the life state
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="view"></param>
         private static void RunEventLoop(Connection connection, View view)
         {
             var maxWait = System.TimeSpan.FromMilliseconds(1000f / FramesPerSecond); //When does QoS hit, are there heartbeat ops that need to go out faster than a second?
@@ -84,7 +96,7 @@ namespace Demo
                 // Invoke callbacks.
                 view.Process(opList);
                 // Do other work here...
-                UpdateEntities(view);
+                UpdateEntities(view, connection);
                 stopwatch.Stop();
                 var waitFor = maxWait.Subtract(stopwatch.Elapsed);
                 System.Threading.Thread.Sleep(waitFor.Milliseconds > 0 ? waitFor : System.TimeSpan.Zero);
@@ -95,20 +107,31 @@ namespace Demo
         /// Runs through the current view and sends updates to the entities it has write authority over
         /// </summary>
         /// <param name="view"></param>
-        private static void UpdateEntities(View view)
+        private static void UpdateEntities(View view, Connection connection)
         {
             int liveNeighborCount = 0;
+            bool hasNext = true;
+            bool canGetAllNeighbors = false;
 
-            //Iterate through every entity in the view
-            foreach(Entity e in view.Entities.Values)
+            //Run through every id/entity pair in the view
+            var enumerator = view.Entities.GetEnumerator();
+            while(hasNext)
             {
+                var pair = enumerator.Current;
+                EntityId id = pair.Key;
+                Entity e = pair.Value;
+
                 //Only do this update if this worker has write access to the entity
-                
+                //Is there a way to determine that this worker has write access to an entity?
 
                 //Get the number of live neighbors
-                liveNeighborCount = GetLiveNeighbors(e, view);
+                canGetAllNeighbors = TryGetLiveNeighbors(e, view, out liveNeighborCount);
                 //Update the entity based on the live neighbor count
-                UpdateEntity(e, liveNeighborCount);
+                if(canGetAllNeighbors)
+                {
+                    UpdateEntity(id, e, liveNeighborCount, connection);
+                }
+                hasNext = enumerator.MoveNext();
             }
         }
 
@@ -118,9 +141,10 @@ namespace Demo
         /// <param name="e"></param>
         /// <param name="view"></param>
         /// <returns></returns>
-        private static int GetLiveNeighbors(Entity e, View view)
+        private static bool TryGetLiveNeighbors(Entity e, View view, out int LiveNeighborCount)
         {
             Entity neighbor;
+            bool canGetLiveNeighbors = true;
             bool hasNeighbor = false;
             int liveNeighbors = 0;
 
@@ -141,7 +165,9 @@ namespace Demo
                 if(!hasNeighbor)
                 {
                     //How to get the neighbor if it isn't in the view?
-                    //This should only be for outer edge items, which this worker should only have read and not write, right?
+                    //This should only be for outer edge items, which this worker should only have read and not write
+                    //Although there may be an issue of "View Completeness" in the beginning... so just say no and don't update the entity yet.
+                    canGetLiveNeighbors = false;
                 }
                 
                 if(IsCellAlive(seqId, neighbor))
@@ -151,7 +177,8 @@ namespace Demo
                 }
             }
 
-            return liveNeighbors;
+            LiveNeighborCount = liveNeighbors;
+            return canGetLiveNeighbors;
         }
 
         /// <summary>
@@ -199,10 +226,10 @@ namespace Demo
         /// Update an entity based on the rules of Conways Game of Life
         /// </summary>
         /// <param name="e">The entity to update</param>
-        private static void UpdateEntity(Entity e, int LiveNeighborCount)
+        private static void UpdateEntity(EntityId id, Entity e, int LiveNeighborCount, Connection connection)
         {
             //Get Current life state of the entity
-            bool isAlive = false;
+            bool isAlive = IsCellAlive(GetLatestSequenceId(e), e);
             bool isAliveNextState = false;
 
             // If current state = is Alive && (If LiveNeighborCount < 2 OR LiveNeighborCount > 3) Then Update to next state = dead
@@ -215,11 +242,39 @@ namespace Demo
             {
                 isAliveNextState = true;
             }
+            //If it doesn't meet the above criteria, then the previous state persists to the next time step
+            else
+            {
+                isAliveNextState = isAlive;
+            }
 
-            //set prev state and count id to the current state/id
             //Set new current state
+            UpdateLifeComponent(connection, id, e, isAliveNextState);
+        }
 
+        /// <summary>
+        /// Update the Life component to the provided next state
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="isAliveNextState"></param>
+        private static void UpdateLifeComponent(Connection connection, EntityId id, Entity e, bool isAliveNextState)
+        {
+            ulong curSequenceId = GetLatestSequenceId(e);
+            bool curIsAlive = IsCellAlive(curSequenceId, e);
 
+            //Create new component update object
+            Life.Update lu = new Life.Update();
+
+            //set prev state and count id to the current state and time id
+            lu.SetPrevSequenceId(curSequenceId);
+            lu.SetPrevIsAlive(curIsAlive);
+
+            //Set new current state
+            lu.SetCurIsAlive(isAliveNextState);
+            lu.SetCurSequenceId(curSequenceId + 1);
+
+            //Send the update
+            connection.SendComponentUpdate<Life>(id, lu);
         }
     }
 }
