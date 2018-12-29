@@ -2,7 +2,7 @@
 # Conway's Game of Life using SpatialOS
 
 ## What is it?
-This is a simple SpatialOS project with one C# erver Worker and a Snapshot Generator.
+This is a simple SpatialOS project with one C# Server Worker and a Snapshot Generator.
 
 > **Note**: SpatialOS expects the workers to be pre-built, and only contains information on how to run them. This means the `spatial worker build` command is unavailable - you're responsible for building your workers (see [Building the project](#building-the-project) below).
 
@@ -30,20 +30,18 @@ Run `./build.sh` to build the workers and compile the schema descriptor. You can
 
 Workers and tools are built in their own bin directories:
 * LifeWorker: `LifeoWorker/bin`
-* SnapshotGenerator: 'SnapshotGenerator/bin'
+* SnapshotGenerator: `SnapshotGenerator/bin`
 
 ## Cleaning the project
 Run `./clean.sh` to delete all build files, including worker binaries and any intermediate files generated during the build process.
 
 ## Running the project
 
-To launch a local instance of SpatialOS running the project,  run `spatial local launch` from the SpatialOS directory (or from any location by specifying the `--main_config=\<path to spatialos.json\>` flag). This starts SpatialOS locally and runs the server workers `HelloWorker` and `DiceWorker`.
+To launch a local instance of SpatialOS running the project, run `spatial local launch --launch_config ./deployment.json --optimize_for_runtime_v2` from the SpatialOS directory (or from any location by specifying the `--main_config=\<path to spatialos.json\>` flag). This starts SpatialOS locally and runs the server workers `LifeWorker` using the latest version of the runtime.
 
 Connect your client by opening a second terminal to run the binary directly (from inside the `ReleaseWindows` or `ReleaseMacOS` directories):
 * Windows: `./Client.exe localhost 7777 <client_id>`
 * macOS: `mono --arch=64 Client.exe localhost 7777 <client_id>`
-
-This connects a client that pings the `HelloWorker` and `DiceWorker` every few seconds and then prints the response.
 
 ## Reference documentation
 
