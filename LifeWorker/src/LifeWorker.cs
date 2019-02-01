@@ -8,7 +8,7 @@ using Improbable;
 
 namespace Demo
 {
-    class HelloWorker
+    class HelloWorker //Change this to LifeWorker
     {
         // https://github.com/spatialos/FlexibleProjectExample/blob/master/HelloWorker/src/HelloWorker.cs
 
@@ -110,16 +110,20 @@ namespace Demo
         private static void UpdateEntities(View view, Connection connection)
         {
             int liveNeighborCount = 0;
-            bool hasNext = true;
             bool canGetAllNeighbors = false;
 
             //Run through every id/entity pair in the view
-            var enumerator = view.Entities.GetEnumerator();
-            while(hasNext)
+            //bool hasNext = true;
+            //var enumerator = view.Entities.GetEnumerator(); //For some reason using the enumerator directly returned EntityID = 0 and Entity = null as first key/value pair
+            foreach (var pair in view.Entities)
             {
-                var pair = enumerator.Current;
                 EntityId id = pair.Key;
                 Entity e = pair.Value;
+
+                if (e == null)
+                {
+                    throw new NullReferenceException("View Entities Enum has returned a null entity for EntityID " + pair.Key.ToString());
+                }
 
                 //Only do this update if this worker has write access to the entity
                 //Is there a way to determine that this worker has write access to an entity?
@@ -131,7 +135,7 @@ namespace Demo
                 {
                     UpdateEntity(id, e, liveNeighborCount, connection);
                 }
-                hasNext = enumerator.MoveNext();
+                //hasNext = enumerator.MoveNext();
             }
         }
 
@@ -188,10 +192,16 @@ namespace Demo
         /// <returns></returns>
         private static ulong GetLatestSequenceId(Entity e)
         {
-            var option = e.Get<Life>();
-            var life = option.Value;
-            var lifeData = life.Get();
-            LifeData ld = lifeData.Value;
+            //Inout entity is null... why?
+            Option<IComponentData<Life>> option;
+            IComponentData<Life> life;
+            Life.Data lifeData;
+            LifeData ld;
+
+            option = e.Get<Life>();
+            life = option.Value;
+            lifeData = life.Get();
+            ld = lifeData.Value;
             return ld.curSequenceId;
         }
 

@@ -98,8 +98,8 @@ for WORKER in "${WORKER_DIRS[@]}"; do
   for PLATFORM in "${BUILD_PLATFORMS[@]}"; do
     ${BUILD_TOOL} CsharpWorker.sln /property:Configuration=Release /property:Platform="$PLATFORM"
     cp -r bin ..
-    rm -rf bin
-    rm -rf obj
+    # rm -rf bin
+    # rm -rf obj
   done
   popd
 done

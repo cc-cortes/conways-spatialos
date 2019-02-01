@@ -1,0 +1,7 @@
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseLinux\libCoreSdkDll.so
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseLinux\SnapshotGenerator.exe
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseLinux\GeneratedCode.dll
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseLinux\Improbable.WorkerSdkCsharp.dll
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\bin\x64\ReleaseLinux\GeneratedCode.pdb
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\ReleaseLinux\CsharpWorker.csprojResolveAssemblyReference.cache
+C:\Users\chriscortes\Source\Repos\Conways\SnapshotGenerator\src\obj\x64\ReleaseLinux\SnapshotGenerator.exe

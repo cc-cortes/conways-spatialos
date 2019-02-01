@@ -11,7 +11,7 @@ namespace Demo
     {
         const string snapshotName = "default.snapshot";
         const string snapshotPath = snapshotName;
-        const string workerType = "LifeWorker";
+        const string workerType = "life"; //Layer name not workerType?
 
         static int Main(string[] arguments)
         {
@@ -24,8 +24,8 @@ namespace Demo
             SnapshotOutputStream sos = new SnapshotOutputStream(snapshotPath);
 
             var id = 0;
-            var maxRowCount = 100;
-            var maxColumnCount = 100;
+            var maxRowCount = 50;  //dimensionsInWorldUnits z is 100
+            var maxColumnCount = 50; //dimensionsInWorldUnits x is 100
 
             //Create a grid of entities
             for (double y = 0; y < maxRowCount; y++) //Starts at 0
@@ -124,8 +124,8 @@ namespace Demo
             var readRequirementSet = new WorkerRequirementSet(
                 new Improbable.Collections.List<WorkerAttributeSet>
                 {
-                    new WorkerAttributeSet(new Improbable.Collections.List<string> {workerType}),
-                    new WorkerAttributeSet(new Improbable.Collections.List<string> {"client"}),
+                    new WorkerAttributeSet(new Improbable.Collections.List<string> {workerType})
+                    //new WorkerAttributeSet(new Improbable.Collections.List<string> {"client"}),
                 });
 
             // Defines worker attribute requirements for workers that can write to a component.
