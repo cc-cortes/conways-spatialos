@@ -5,10 +5,11 @@ using System.Reflection;
 using Improbable.Worker;
 using Improbable.Collections;
 using Improbable;
+using System.Diagnostics;
 
 namespace Demo
 {
-    class HelloWorker //Change this to LifeWorker
+    class LifeWorker //Change this to LifeWorker
     {
         // https://github.com/spatialos/FlexibleProjectExample/blob/master/HelloWorker/src/HelloWorker.cs
 
@@ -18,6 +19,10 @@ namespace Demo
         private const uint GetOpListTimeoutInMilliseconds = 100;
         const int FramesPerSecond = 1;
         private static bool IsConnected;
+        private const string EntityTypeCellAlive = "Cell_Alive";
+        private const string EntityTypeCellDead = "Cell_Dead";
+
+        private static Connection WorkerConnection;
 
         static int Main(string[] arguments)
         {
@@ -28,7 +33,6 @@ namespace Demo
 
             Assembly.Load("GeneratedCode");
 
-            Console.WriteLine("Worker Starting...");
             using (var connection = ConnectWorker(workerId, hostName, port))
             {
                 using (var view = new View())
@@ -52,6 +56,8 @@ namespace Demo
                         }
                     });
 
+                    WorkerConnection = connection;
+                    WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Worker Connected");
                     RunEventLoop(connection, view);
                 }    
             }
@@ -109,6 +115,8 @@ namespace Demo
         /// <param name="view"></param>
         private static void UpdateEntities(View view, Connection connection)
         {
+            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Beginning Update Entities");
+
             int liveNeighborCount = 0;
             bool canGetAllNeighbors = false;
 
@@ -128,14 +136,22 @@ namespace Demo
                 //Only do this update if this worker has write access to the entity
                 //Is there a way to determine that this worker has write access to an entity?
 
-                //Get the number of live neighbors
-                canGetAllNeighbors = TryGetLiveNeighbors(e, view, out liveNeighborCount);
-                //Update the entity based on the live neighbor count
-                if(canGetAllNeighbors)
+                //Only do this if the entity is a Cell type (which should have a Life component)
+                var componentIdSet = e.GetComponentIds();
+                if(componentIdSet.Contains(Life.ComponentId))
                 {
-                    UpdateEntity(id, e, liveNeighborCount, connection);
+                    //Get the number of live neighbors
+                    canGetAllNeighbors = TryGetLiveNeighbors(e, view, out liveNeighborCount);
+                    //Update the entity based on the live neighbor count
+                    if (canGetAllNeighbors)
+                    {
+                        UpdateEntity(id, e, liveNeighborCount, connection);
+                    }
                 }
-                //hasNext = enumerator.MoveNext();
+                else
+                {
+                    WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Life component not present on entity " + id.ToString() + ". update not done.");
+                }
             }
         }
 
@@ -173,8 +189,7 @@ namespace Demo
                     //Although there may be an issue of "View Completeness" in the beginning... so just say no and don't update the entity yet.
                     canGetLiveNeighbors = false;
                 }
-                
-                if(IsCellAlive(seqId, neighbor))
+                else if(IsCellAlive(seqId, neighborId, neighbor))
                 {
                     //What if that cell isn't at that time sequence ID yet?
                     liveNeighbors++;
@@ -211,16 +226,24 @@ namespace Demo
         /// <param name="sequenceId"></param>
         /// <param name="cellEntity"></param>
         /// <returns></returns>
-        private static bool IsCellAlive(ulong sequenceId, Entity cellEntity)
+        private static bool IsCellAlive(ulong sequenceId, EntityId cellId, Entity cellEntity)
         {
             bool isAlive = false;
 
             var option = cellEntity.Get<Life>();
+
+            if(!(option.HasValue)) //Why is this happening? All Entities should have the Life component. Maybe there are entities that I'm picking up that aren't Cells?
+            {
+                WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "IsCellAlive: option does not have Life component value for entity " + cellId.ToString());
+                return isAlive = false;
+            }
+
             var life = option.Value;
+
             var lifeData = life.Get();
             LifeData ld = lifeData.Value;
 
-            if(ld.curSequenceId == sequenceId)
+            if (ld.curSequenceId == sequenceId)
             {
                 isAlive = ld.curIsAlive;
             }
@@ -239,7 +262,7 @@ namespace Demo
         private static void UpdateEntity(EntityId id, Entity e, int LiveNeighborCount, Connection connection)
         {
             //Get Current life state of the entity
-            bool isAlive = IsCellAlive(GetLatestSequenceId(e), e);
+            bool isAlive = IsCellAlive(GetLatestSequenceId(e), id, e);
             bool isAliveNextState = false;
 
             // If current state = is Alive && (If LiveNeighborCount < 2 OR LiveNeighborCount > 3) Then Update to next state = dead
@@ -270,8 +293,19 @@ namespace Demo
         private static void UpdateLifeComponent(Connection connection, EntityId id, Entity e, bool isAliveNextState)
         {
             ulong curSequenceId = GetLatestSequenceId(e);
-            bool curIsAlive = IsCellAlive(curSequenceId, e);
+            bool curIsAlive = IsCellAlive(curSequenceId, id, e);
 
+            //Update metadata for visualization in inspector
+            Metadata.Update mu = new Metadata.Update();
+            if(isAliveNextState)
+            {
+                mu.SetEntityType(EntityTypeCellAlive);
+            }
+            else
+            {
+                mu.SetEntityType(EntityTypeCellDead);
+            }
+            
             //Create new component update object
             Life.Update lu = new Life.Update();
 
@@ -283,8 +317,10 @@ namespace Demo
             lu.SetCurIsAlive(isAliveNextState);
             lu.SetCurSequenceId(curSequenceId + 1);
 
-            //Send the update
+            //Send the updates
+            connection.SendComponentUpdate<Metadata>(id, mu);
             connection.SendComponentUpdate<Life>(id, lu);
+            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "UpdateLifeComponent: Life Component Updated for Entity " + id.ToString());
         }
     }
 }

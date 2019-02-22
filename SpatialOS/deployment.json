@@ -1,3 +1,21 @@
 {
-    "template": "small_loadbalancer_v2"
+  "template": "small",
+  "dimensionsInWorldUnits": {
+    "x": 100,
+    "z": 100
+  },
+      "loadBalancing": {
+    "layerConfigurations": [
+      {
+        "layer": "life",
+        "hexGrid": {
+          "numWorkers": 1
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "takeSnapshotIntervalSeconds": "0",
+    "startDeploymentFromSnapshotFile": "../shared/default.snapshot"
+  }
 }

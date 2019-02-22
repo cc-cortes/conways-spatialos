@@ -26,6 +26,7 @@ namespace Demo
             var id = 0;
             var maxRowCount = 50;  //dimensionsInWorldUnits z is 100
             var maxColumnCount = 50; //dimensionsInWorldUnits x is 100
+            // TODO: Update to account for center being at (0.0)
 
             //Create a grid of entities
             for (double y = 0; y < maxRowCount; y++) //Starts at 0
@@ -35,7 +36,9 @@ namespace Demo
                     id++; //starts at 1
                     var entityId = new EntityId(id);
                     Improbable.Collections.List<EntityId> nList = getNeighbors(x, maxColumnCount, y, maxRowCount, id);
-                    var entity = createEntity(workerType, x, y, false, 0, false, 0, nList);
+                    bool currIsAlive = RandomBool();
+                    bool prevIsAlive = RandomBool();
+                    var entity = createEntity(workerType, x, y, currIsAlive, 0, prevIsAlive, 0, nList);
                     var error = sos.WriteEntity(entityId, entity);
                     if (error.HasValue)
                     {
@@ -48,6 +51,18 @@ namespace Demo
             sos.Dispose();
 
             return 0;
+        }
+
+        private static bool RandomBool()
+        {
+            bool output = true;
+            var rand = new Random();
+            if(rand.Next(2) == 0)
+            {
+                output = false;
+            }
+            
+            return output;
         }
 
         private static Improbable.Collections.List<EntityId> getNeighbors(double x, int maxColumnCount, double y, int maxRowCount, int id)
@@ -118,7 +133,17 @@ namespace Demo
         private static Entity createEntity(string workerType, double X, double Y, bool currentAlive, UInt64 currentSequenceId, bool previousAlive, UInt64 previousSequenceId, Improbable.Collections.List<EntityId> neighborsList)
         {
             var entity = new Entity();
-            const string entityType = "Cell";
+            //const string entityType = "Cell";
+            string entityType = "Cell";
+            if(currentAlive)
+            {
+                entityType = "Cell_Alive";
+            }
+            else
+            {
+                entityType = "Cell_Dead";
+            }
+
             // Defines worker attribute requirements for workers that can read a component.
             // workers with an attribute of "client" OR workerType will have read access
             var readRequirementSet = new WorkerRequirementSet(
@@ -145,7 +170,7 @@ namespace Demo
             entity.Add(new EntityAcl.Data(readRequirementSet, writeAcl));
             // Needed for the entity to be persisted in snapshots.
             entity.Add(new Persistence.Data());
-            entity.Add(new Metadata.Data(entityType));
+            entity.Add(new Metadata.Data(entityType)); //Can use metadata to do color setting for visualization in inspector
             entity.Add(new Position.Data(new Coordinates(X, 0, Y)));
             entity.Add(new Life.Data(currentAlive, currentSequenceId, previousAlive, previousSequenceId));
             entity.Add(new Neighbors.Data(neighborsList));

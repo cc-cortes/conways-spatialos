@@ -4,5 +4,6 @@
   "schemaDescriptor": "./schema/bin/schema.descriptor",
   "serverWorkers": [
     "../LifeWorker/life_worker.json"
-  ]
+  ],
+  "launchConfig": "./deployment.json"
 }
