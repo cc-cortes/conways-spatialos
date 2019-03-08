@@ -49,11 +49,11 @@ public partial struct PersistenceData : global::System.IEquatable<PersistenceDat
 public static class PersistenceData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  PersistenceData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           PersistenceData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
   }
 
-  public static unsafe PersistenceData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe PersistenceData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     PersistenceData _data;
     return _data;

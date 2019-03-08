@@ -81,30 +81,30 @@ public partial struct Vector3f : global::System.IEquatable<Vector3f>, global::Im
 public static class Vector3f_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  Vector3f _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           Vector3f _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      global::Improbable.Worker.Internal.Pbio.AddFloat(_obj, 1, _data.x);
+      _obj.AddFloat(1, _data.x);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddFloat(_obj, 2, _data.y);
+      _obj.AddFloat(2, _data.y);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddFloat(_obj, 3, _data.z);
+      _obj.AddFloat(3, _data.z);
     }
   }
 
-  public static unsafe Vector3f Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe Vector3f Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     Vector3f _data;
     {
-      _data.x = global::Improbable.Worker.Internal.Pbio.GetFloat(_obj, 1);
+      _data.x = _obj.GetFloat(1);
     }
     {
-      _data.y = global::Improbable.Worker.Internal.Pbio.GetFloat(_obj, 2);
+      _data.y = _obj.GetFloat(2);
     }
     {
-      _data.z = global::Improbable.Worker.Internal.Pbio.GetFloat(_obj, 3);
+      _data.z = _obj.GetFloat(3);
     }
     return _data;
   }

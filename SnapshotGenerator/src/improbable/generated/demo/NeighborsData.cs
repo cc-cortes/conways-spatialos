@@ -63,23 +63,26 @@ public partial struct NeighborsData : global::System.IEquatable<NeighborsData>, 
 public static class NeighborsData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  NeighborsData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           NeighborsData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
-    for (int _i = 0; _i < _data.neighborList.Count; ++_i)
+    if (_data.neighborList != null)
     {
-      global::Improbable.Worker.Internal.Pbio.AddInt64(_obj, 1, _data.neighborList[_i].Id);
+      for (int _i = 0; _i < _data.neighborList.Count; ++_i)
+      {
+        _obj.AddInt64(1, _data.neighborList[_i].Id);
+      }
     }
   }
 
-  public static unsafe NeighborsData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe NeighborsData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     NeighborsData _data;
     {
-      var _count = global::Improbable.Worker.Internal.Pbio.GetInt64Count(_obj, 1);
+      var _count = _obj.GetInt64Count(1);
       _data.neighborList = new global::Improbable.Collections.List<global::Improbable.EntityId>((int) _count);
       for (uint _i = 0; _i < _count; ++_i)
       {
-        _data.neighborList.Add(new global::Improbable.EntityId(global::Improbable.Worker.Internal.Pbio.IndexInt64(_obj, 1, _i)));
+        _data.neighborList.Add(new global::Improbable.EntityId(_obj.IndexInt64(1, _i)));
       }
     }
     return _data;

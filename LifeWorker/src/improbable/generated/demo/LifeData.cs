@@ -90,36 +90,36 @@ public partial struct LifeData : global::System.IEquatable<LifeData>, global::Im
 public static class LifeData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  LifeData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           LifeData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      global::Improbable.Worker.Internal.Pbio.AddBool(_obj, 1, (byte) (_data.curIsAlive ? 1 : 0));
+      _obj.AddBool(1, _data.curIsAlive);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddUint64(_obj, 2, _data.curSequenceId);
+      _obj.AddUint64(2, _data.curSequenceId);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddBool(_obj, 3, (byte) (_data.prevIsAlive ? 1 : 0));
+      _obj.AddBool(3, _data.prevIsAlive);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddUint64(_obj, 4, _data.prevSequenceId);
+      _obj.AddUint64(4, _data.prevSequenceId);
     }
   }
 
-  public static unsafe LifeData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe LifeData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     LifeData _data;
     {
-      _data.curIsAlive = global::Improbable.Worker.Internal.Pbio.GetBool(_obj, 1) != 0;
+      _data.curIsAlive = _obj.GetBool(1);
     }
     {
-      _data.curSequenceId = global::Improbable.Worker.Internal.Pbio.GetUint64(_obj, 2);
+      _data.curSequenceId = _obj.GetUint64(2);
     }
     {
-      _data.prevIsAlive = global::Improbable.Worker.Internal.Pbio.GetBool(_obj, 3) != 0;
+      _data.prevIsAlive = _obj.GetBool(3);
     }
     {
-      _data.prevSequenceId = global::Improbable.Worker.Internal.Pbio.GetUint64(_obj, 4);
+      _data.prevSequenceId = _obj.GetUint64(4);
     }
     return _data;
   }

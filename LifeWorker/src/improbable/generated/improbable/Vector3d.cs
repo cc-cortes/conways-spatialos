@@ -81,30 +81,30 @@ public partial struct Vector3d : global::System.IEquatable<Vector3d>, global::Im
 public static class Vector3d_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  Vector3d _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           Vector3d _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      global::Improbable.Worker.Internal.Pbio.AddDouble(_obj, 1, _data.x);
+      _obj.AddDouble(1, _data.x);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddDouble(_obj, 2, _data.y);
+      _obj.AddDouble(2, _data.y);
     }
     {
-      global::Improbable.Worker.Internal.Pbio.AddDouble(_obj, 3, _data.z);
+      _obj.AddDouble(3, _data.z);
     }
   }
 
-  public static unsafe Vector3d Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe Vector3d Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     Vector3d _data;
     {
-      _data.x = global::Improbable.Worker.Internal.Pbio.GetDouble(_obj, 1);
+      _data.x = _obj.GetDouble(1);
     }
     {
-      _data.y = global::Improbable.Worker.Internal.Pbio.GetDouble(_obj, 2);
+      _data.y = _obj.GetDouble(2);
     }
     {
-      _data.z = global::Improbable.Worker.Internal.Pbio.GetDouble(_obj, 3);
+      _data.z = _obj.GetDouble(3);
     }
     return _data;
   }

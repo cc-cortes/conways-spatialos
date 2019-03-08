@@ -173,6 +173,13 @@ namespace Demo
 
             //Get the list of neighbor entity ids
             var option = e.Get<Neighbors>();
+
+            if(!option.HasValue)
+            {
+                LiveNeighborCount = 0;
+                return canGetLiveNeighbors = false;
+            }
+
             var neighbors = option.Value;
             var neighborsData = neighbors.Get();
             NeighborsData nd = neighborsData.Value;
@@ -320,7 +327,7 @@ namespace Demo
             //Send the updates
             connection.SendComponentUpdate<Metadata>(id, mu);
             connection.SendComponentUpdate<Life>(id, lu);
-            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "UpdateLifeComponent: Life Component Updated for Entity " + id.ToString());
+            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "UpdateLifeComponent: Life Component Updated for Entity " + id.ToString() + " to sequence id: " + curSequenceId + " and isAlive: " + isAliveNextState.ToString());
         }
     }
 }

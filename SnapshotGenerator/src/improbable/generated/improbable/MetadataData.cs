@@ -63,25 +63,18 @@ public partial struct MetadataData : global::System.IEquatable<MetadataData>, gl
 public static class MetadataData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  MetadataData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           MetadataData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      if (_data.entityType != null)
-      {
-        var _buffer = global::System.Text.Encoding.UTF8.GetBytes(_data.entityType);
-        global::Improbable.Worker.Internal.Pbio.AddBytes(_obj, 1, (byte*) _pool.Pin(_buffer), (uint) _buffer.Length);
-      }
-      else{
-        global::Improbable.Worker.Internal.Pbio.AddBytes(_obj, 1, null, 0);
-      }
+      _obj.AddString(1, _data.entityType);
     }
   }
 
-  public static unsafe MetadataData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe MetadataData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     MetadataData _data;
     {
-      _data.entityType = global::System.Text.Encoding.UTF8.GetString(global::Improbable.Worker.Bytes.CopyOf(global::Improbable.Worker.Internal.Pbio.GetBytes(_obj, 1), global::Improbable.Worker.Internal.Pbio.GetBytesLength(_obj, 1)).BackingArray);
+      _data.entityType = _obj.GetString(1);
     }
     return _data;
   }

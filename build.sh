@@ -21,7 +21,7 @@ WORKER_DIRS=(LifeWorker SnapshotGenerator)
 BUILD_PLATFORMS=(macOS64 Windows64 Linux64)
 DOWNLOAD_DIR="$(pwd)/build"
 BUILD_DIR="$(pwd)"
-SDK_VERSION="13.0.1"
+SDK_VERSION="13.6.2"
 mkdir -p "${DOWNLOAD_DIR}"
 
 function isLinux() {

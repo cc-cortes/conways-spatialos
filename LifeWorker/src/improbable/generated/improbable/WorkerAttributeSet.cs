@@ -63,30 +63,26 @@ public partial struct WorkerAttributeSet : global::System.IEquatable<WorkerAttri
 public static class WorkerAttributeSet_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  WorkerAttributeSet _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           WorkerAttributeSet _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
-    for (int _i = 0; _i < _data.attribute.Count; ++_i)
+    if (_data.attribute != null)
     {
-      if (_data.attribute[_i] != null)
+      for (int _i = 0; _i < _data.attribute.Count; ++_i)
       {
-        var _buffer = global::System.Text.Encoding.UTF8.GetBytes(_data.attribute[_i]);
-        global::Improbable.Worker.Internal.Pbio.AddBytes(_obj, 1, (byte*) _pool.Pin(_buffer), (uint) _buffer.Length);
-      }
-      else{
-        global::Improbable.Worker.Internal.Pbio.AddBytes(_obj, 1, null, 0);
+        _obj.AddString(1, _data.attribute[_i]);
       }
     }
   }
 
-  public static unsafe WorkerAttributeSet Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe WorkerAttributeSet Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     WorkerAttributeSet _data;
     {
-      var _count = global::Improbable.Worker.Internal.Pbio.GetBytesCount(_obj, 1);
+      var _count = _obj.GetStringCount(1);
       _data.attribute = new global::Improbable.Collections.List<string>((int) _count);
       for (uint _i = 0; _i < _count; ++_i)
       {
-        _data.attribute.Add(global::System.Text.Encoding.UTF8.GetString(global::Improbable.Worker.Bytes.CopyOf(global::Improbable.Worker.Internal.Pbio.IndexBytes(_obj, 1, _i), global::Improbable.Worker.Internal.Pbio.IndexBytesLength(_obj, 1, _i)).BackingArray));
+        _data.attribute.Add(_obj.IndexString(1, _i));
       }
     }
     return _data;

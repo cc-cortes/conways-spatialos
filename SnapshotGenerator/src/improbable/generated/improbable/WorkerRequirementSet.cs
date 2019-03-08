@@ -63,23 +63,26 @@ public partial struct WorkerRequirementSet : global::System.IEquatable<WorkerReq
 public static class WorkerRequirementSet_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  WorkerRequirementSet _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           WorkerRequirementSet _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
-    for (int _i = 0; _i < _data.attributeSet.Count; ++_i)
+    if (_data.attributeSet != null)
     {
-      global::Improbable.WorkerAttributeSet_Internal.Write(_pool, _data.attributeSet[_i], global::Improbable.Worker.Internal.Pbio.AddObject(_obj, 1));
+      for (int _i = 0; _i < _data.attributeSet.Count; ++_i)
+      {
+        global::Improbable.WorkerAttributeSet_Internal.Write(_pool, _data.attributeSet[_i], _obj.AddObject(1));
+      }
     }
   }
 
-  public static unsafe WorkerRequirementSet Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe WorkerRequirementSet Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     WorkerRequirementSet _data;
     {
-      var _count = global::Improbable.Worker.Internal.Pbio.GetObjectCount(_obj, 1);
+      var _count = _obj.GetObjectCount(1);
       _data.attributeSet = new global::Improbable.Collections.List<global::Improbable.WorkerAttributeSet>((int) _count);
       for (uint _i = 0; _i < _count; ++_i)
       {
-        _data.attributeSet.Add(global::Improbable.WorkerAttributeSet_Internal.Read(global::Improbable.Worker.Internal.Pbio.IndexObject(_obj, 1, _i)));
+        _data.attributeSet.Add(global::Improbable.WorkerAttributeSet_Internal.Read(_obj.IndexObject(1, _i)));
       }
     }
     return _data;

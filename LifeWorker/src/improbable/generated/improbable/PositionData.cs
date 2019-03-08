@@ -63,18 +63,18 @@ public partial struct PositionData : global::System.IEquatable<PositionData>, gl
 public static class PositionData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  PositionData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           PositionData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      global::Improbable.Coordinates_Internal.Write(_pool, _data.coords, global::Improbable.Worker.Internal.Pbio.AddObject(_obj, 1));
+      global::Improbable.Coordinates_Internal.Write(_pool, _data.coords, _obj.AddObject(1));
     }
   }
 
-  public static unsafe PositionData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe PositionData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     PositionData _data;
     {
-      _data.coords = global::Improbable.Coordinates_Internal.Read(global::Improbable.Worker.Internal.Pbio.GetObject(_obj, 1));
+      _data.coords = global::Improbable.Coordinates_Internal.Read(_obj.GetObject(1));
     }
     return _data;
   }

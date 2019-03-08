@@ -180,19 +180,35 @@ public partial class Life : global::Improbable.Worker.IComponentMetaclass
   // Implementation details below here.
   //----------------------------------------------------------------
 
-  public global::Improbable.Worker.Internal.ComponentProtocol.ComponentVtable Vtable {
-    get {
-      global::Improbable.Worker.Internal.ComponentProtocol.ComponentVtable vtable;
-      vtable.ComponentId = ComponentId;
-      vtable.Free = global::System.Runtime.InteropServices.Marshal
-          .GetFunctionPointerForDelegate(global::Improbable.Worker.Internal.ClientHandles.ClientFree);
-      vtable.Copy = global::System.Runtime.InteropServices.Marshal
-          .GetFunctionPointerForDelegate(global::Improbable.Worker.Internal.ClientHandles.ClientCopy);
-      vtable.Deserialize = global::System.Runtime.InteropServices.Marshal
-          .GetFunctionPointerForDelegate(clientDeserialize);
-      vtable.Serialize = global::System.Runtime.InteropServices.Marshal
-          .GetFunctionPointerForDelegate(clientSerialize);
-      return vtable;
+  public global::Improbable.Worker.CInterop.ComponentVtable Vtable
+  {
+    get
+    {
+      unsafe
+      { 
+        var vtable = new global::Improbable.Worker.CInterop.ComponentVtable 
+        {
+          ComponentId = ComponentId,
+          UserData = global::System.UIntPtr.Zero,
+          CommandRequestFree = global::Improbable.Worker.Internal.ClientHandles.HandleFree,
+          CommandRequestCopy = global::Improbable.Worker.Internal.ClientHandles.HandleCopy,
+          CommandRequestDeserialize = CommandRequestDeserialize,
+          CommandRequestSerialize = CommandRequestSerialize,
+          CommandResponseFree = global::Improbable.Worker.Internal.ClientHandles.HandleFree,
+          CommandResponseCopy = global::Improbable.Worker.Internal.ClientHandles.HandleCopy,
+          CommandResponseDeserialize = CommandResponseDeserialize,
+          CommandResponseSerialize = CommandResponseSerialize,
+          ComponentDataFree = global::Improbable.Worker.Internal.ClientHandles.HandleFree,
+          ComponentDataCopy = global::Improbable.Worker.Internal.ClientHandles.HandleCopy,
+          ComponentDataDeserialize = ComponentDataDeserialize,
+          ComponentDataSerialize = ComponentDataSerialize,
+          ComponentUpdateFree = global::Improbable.Worker.Internal.ClientHandles.HandleFree,
+          ComponentUpdateCopy = global::Improbable.Worker.Internal.ClientHandles.HandleCopy,
+          ComponentUpdateDeserialize = ComponentUpdateDeserialize,
+          ComponentUpdateSerialize = ComponentUpdateSerialize
+        };
+        return vtable;
+      }
     }
   }
 
@@ -201,150 +217,231 @@ public partial class Life : global::Improbable.Worker.IComponentMetaclass
     handler.Accept<Life>(this);
   }
 
-  private static unsafe readonly global::Improbable.Worker.Internal.ComponentProtocol.ClientDeserialize
-      clientDeserialize = ClientDeserialize;
-  private static unsafe readonly global::Improbable.Worker.Internal.ComponentProtocol.ClientSerialize
-      clientSerialize = ClientSerialize;
-
-  [global::Improbable.Worker.Internal.MonoPInvokeCallback(typeof(global::Improbable.Worker.Internal.ComponentProtocol.ClientDeserialize))]
-  private static unsafe global::System.Byte
-  ClientDeserialize(global::System.UInt32 componentId,
-                    global::System.Byte handleType,
-                    global::Improbable.Worker.Internal.Pbio.Object* root,
-                    global::Improbable.Worker.Internal.ComponentProtocol.ClientHandle** handleOut)
+  private static unsafe bool
+  ComponentUpdateDeserialize(global::System.UInt32 componentId,
+                             global::System.UIntPtr userData,
+                             global::Improbable.Worker.CInterop.SchemaComponentUpdate source,
+                             out global::System.UIntPtr handleOut)
   {
-    *handleOut = null;
+    handleOut = global::System.UIntPtr.Zero;
     try
     {
-      *handleOut = global::Improbable.Worker.Internal.ClientHandles.HandleAlloc();
-      if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Update) {
-        var data = new Update();
-        var fieldsToClear = new global::System.Collections.Generic.HashSet<uint>();
-        var fieldsToClearCount = global::Improbable.Worker.Internal.Pbio.GetUint32Count(root, /* fields to clear */ 1);
-        for (uint i = 0; i < fieldsToClearCount; ++i)
-        {
-           fieldsToClear.Add(global::Improbable.Worker.Internal.Pbio.IndexUint32(root, /* fields to clear */ 1, i));
-        }
-        var stateObject = global::Improbable.Worker.Internal.Pbio.GetObject(
-            global::Improbable.Worker.Internal.Pbio.GetObject(root, /* entity_state */ 2), 111);
-        if (global::Improbable.Worker.Internal.Pbio.GetBoolCount(stateObject, 1) > 0)
-        {
-          bool field;
-          {
-            field = global::Improbable.Worker.Internal.Pbio.GetBool(stateObject, 1) != 0;
-          }
-          data.curIsAlive.Set(field);
-        }
-        if (global::Improbable.Worker.Internal.Pbio.GetUint64Count(stateObject, 2) > 0)
-        {
-          ulong field;
-          {
-            field = global::Improbable.Worker.Internal.Pbio.GetUint64(stateObject, 2);
-          }
-          data.curSequenceId.Set(field);
-        }
-        if (global::Improbable.Worker.Internal.Pbio.GetBoolCount(stateObject, 3) > 0)
-        {
-          bool field;
-          {
-            field = global::Improbable.Worker.Internal.Pbio.GetBool(stateObject, 3) != 0;
-          }
-          data.prevIsAlive.Set(field);
-        }
-        if (global::Improbable.Worker.Internal.Pbio.GetUint64Count(stateObject, 4) > 0)
-        {
-          ulong field;
-          {
-            field = global::Improbable.Worker.Internal.Pbio.GetUint64(stateObject, 4);
-          }
-          data.prevSequenceId.Set(field);
-        }
-        **handleOut = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
-      }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Snapshot)
+      var data = new Update();
+      var fieldsToClear = new global::System.Collections.Generic.HashSet<uint>();
+      var fieldsToClearCount = source.GetClearedFieldCount();
+      for (uint i = 0; i < fieldsToClearCount; ++i)
       {
-        var data = new Data(global::Demo.LifeData_Internal.Read(
-            global::Improbable.Worker.Internal.Pbio.GetObject(root, 111)));
-        **handleOut = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
+         fieldsToClear.Add(source.IndexClearedField(i));
       }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Request)
+      var fields = source.GetFields();
+      if (fields.GetBoolCount(1) > 0)
       {
-        var data = new global::Improbable.Worker.Internal.GenericCommandObject();
-        **handleOut = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
-        return 0;
+        bool field;
+        {
+          field = fields.GetBool(1);
+        }
+        data.curIsAlive.Set(field);
       }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Response)
+      if (fields.GetUint64Count(2) > 0)
       {
-        var data = new global::Improbable.Worker.Internal.GenericCommandObject();
-        **handleOut = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
-        return 0;
+        ulong field;
+        {
+          field = fields.GetUint64(2);
+        }
+        data.curSequenceId.Set(field);
       }
+      if (fields.GetBoolCount(3) > 0)
+      {
+        bool field;
+        {
+          field = fields.GetBool(3);
+        }
+        data.prevIsAlive.Set(field);
+      }
+      if (fields.GetUint64Count(4) > 0)
+      {
+        ulong field;
+        {
+          field = fields.GetUint64(4);
+        }
+        data.prevSequenceId.Set(field);
+      }
+      var handle = global::Improbable.Worker.Internal.ClientHandles.HandleAlloc();
+      *handle = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
+      handleOut = (global::System.UIntPtr) handle;
     }
     catch (global::System.Exception e)
     {
       global::Improbable.Worker.ClientError.LogClientException(e);
-      return 0;
+      return false;
     }
-    return 1;
+    return true;
   }
 
-  [global::Improbable.Worker.Internal.MonoPInvokeCallback(typeof(global::Improbable.Worker.Internal.ComponentProtocol.ClientSerialize))]
-  private static unsafe void
-  ClientSerialize(global::System.UInt32 componentId,
-                  global::System.Byte handleType,
-                  global::Improbable.Worker.Internal.ComponentProtocol.ClientHandle* handle,
-                  global::Improbable.Worker.Internal.Pbio.Object* root)
+  private static unsafe bool
+  ComponentDataDeserialize(global::System.UInt32 componentId,
+                           global::System.UIntPtr userData,
+                           global::Improbable.Worker.CInterop.SchemaComponentData source,
+                           out global::System.UIntPtr handleOut)
   {
+    handleOut = global::System.UIntPtr.Zero;
     try
     {
-      var _pool = global::Improbable.Worker.Internal.ClientHandles.Instance.GetGcHandlePool(*handle);
-      if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Update) {
-        var data = (Update) global::Improbable.Worker.Internal.ClientHandles.Instance.Dereference(*handle);
-        var stateObject = global::Improbable.Worker.Internal.Pbio.AddObject(
-            global::Improbable.Worker.Internal.Pbio.AddObject(root, /* entity_state */ 2), 111);
-        if (data.curIsAlive.HasValue)
-        {
-          {
-            global::Improbable.Worker.Internal.Pbio.AddBool(stateObject, 1, (byte) (data.curIsAlive.Value ? 1 : 0));
-          }
-        }
-        if (data.curSequenceId.HasValue)
-        {
-          {
-            global::Improbable.Worker.Internal.Pbio.AddUint64(stateObject, 2, data.curSequenceId.Value);
-          }
-        }
-        if (data.prevIsAlive.HasValue)
-        {
-          {
-            global::Improbable.Worker.Internal.Pbio.AddBool(stateObject, 3, (byte) (data.prevIsAlive.Value ? 1 : 0));
-          }
-        }
-        if (data.prevSequenceId.HasValue)
-        {
-          {
-            global::Improbable.Worker.Internal.Pbio.AddUint64(stateObject, 4, data.prevSequenceId.Value);
-          }
-        }
-      }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Snapshot) {
-        var data = (Data) global::Improbable.Worker.Internal.ClientHandles.Instance.Dereference(*handle);
-        global::Demo.LifeData_Internal.Write(_pool, data.Value, global::Improbable.Worker.Internal.Pbio.AddObject(root, 111));
-      }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Request)
-      {
-        global::Improbable.Worker.Internal.Pbio.AddObject(root, 111);
-      }
-      else if (handleType == (byte) global::Improbable.Worker.Internal.ComponentProtocol.ClientHandleType.Response)
-      {
-        global::Improbable.Worker.Internal.Pbio.AddObject(root, 111);
-      }
+      var data = new Data(global::Demo.LifeData_Internal.Read(source.GetFields()));
+      var handle = global::Improbable.Worker.Internal.ClientHandles.HandleAlloc();
+      *handle = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
+      handleOut = (global::System.UIntPtr) handle;
     }
     catch (global::System.Exception e)
     {
       global::Improbable.Worker.ClientError.LogClientException(e);
+      return false;
+    }
+    return true;
+  }
+
+  private static unsafe bool
+  CommandRequestDeserialize(global::System.UInt32 componentId,
+                            global::System.UIntPtr userData,
+                            global::Improbable.Worker.CInterop.SchemaCommandRequest source,
+                            out global::System.UIntPtr handleOut)
+  {
+    handleOut = global::System.UIntPtr.Zero;
+    try
+    {
+      var data = new global::Improbable.Worker.Internal.GenericCommandObject();
+      var handle = global::Improbable.Worker.Internal.ClientHandles.HandleAlloc();
+      *handle = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
+      handleOut = (global::System.UIntPtr) handle;
+      return false;
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+      return false;
     }
   }
+
+  private static unsafe bool
+  CommandResponseDeserialize(global::System.UInt32 componentId,
+                             global::System.UIntPtr userData,
+                             global::Improbable.Worker.CInterop.SchemaCommandResponse source,
+                             out global::System.UIntPtr handleOut)
+  {
+    handleOut = global::System.UIntPtr.Zero;
+    try
+    {
+      var data = new global::Improbable.Worker.Internal.GenericCommandObject();
+      var handle = global::Improbable.Worker.Internal.ClientHandles.HandleAlloc();
+      *handle = global::Improbable.Worker.Internal.ClientHandles.Instance.CreateHandle(data);
+      handleOut = (global::System.UIntPtr) handle;
+      return false;
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+      return false;
+    }
+  }
+
+  private static unsafe global::Improbable.Worker.CInterop.SchemaComponentUpdate?
+  ComponentUpdateSerialize(global::System.UInt32 componentId,
+                           global::System.UIntPtr userData,
+                           global::System.UIntPtr handle)
+  {
+    try
+    {
+      var _pool = global::Improbable.Worker.Internal.ClientHandles.Instance.GetGcHandlePool(handle);
+      var data = (Update) global::Improbable.Worker.Internal.ClientHandles.Instance.Dereference(handle);
+      var updateObject = new global::Improbable.Worker.CInterop.SchemaComponentUpdate(111);
+      var fieldsObject = updateObject.GetFields();
+      if (data.curIsAlive.HasValue)
+      {
+        {
+          fieldsObject.AddBool(1, data.curIsAlive.Value);
+        }
+      }
+      if (data.curSequenceId.HasValue)
+      {
+        {
+          fieldsObject.AddUint64(2, data.curSequenceId.Value);
+        }
+      }
+      if (data.prevIsAlive.HasValue)
+      {
+        {
+          fieldsObject.AddBool(3, data.prevIsAlive.Value);
+        }
+      }
+      if (data.prevSequenceId.HasValue)
+      {
+        {
+          fieldsObject.AddUint64(4, data.prevSequenceId.Value);
+        }
+      }
+      return updateObject;
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+      return null;
+    }
+  }
+
+  private static unsafe global::Improbable.Worker.CInterop.SchemaComponentData?
+  ComponentDataSerialize(global::System.UInt32 componentId,
+                         global::System.UIntPtr userData,
+                         global::System.UIntPtr handle)
+  {
+    try
+    {
+      var _pool = global::Improbable.Worker.Internal.ClientHandles.Instance.GetGcHandlePool(handle);
+      var data = (Data) global::Improbable.Worker.Internal.ClientHandles.Instance.Dereference(handle);
+      var dataObject = new global::Improbable.Worker.CInterop.SchemaComponentData(111);
+      global::Demo.LifeData_Internal.Write(_pool, data.Value, dataObject.GetFields());
+      return dataObject;
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+      return null;
+    }
+  }
+
+  private static unsafe global::Improbable.Worker.CInterop.SchemaCommandRequest?
+  CommandRequestSerialize(global::System.UInt32 componentId,
+                          global::System.UIntPtr userData,
+                          global::System.UIntPtr handle)
+  {
+    try
+    {
+      var _pool = global::Improbable.Worker.Internal.ClientHandles.Instance.GetGcHandlePool(handle);
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+
+    }
+    return null;
+  }
+
+  private static unsafe global::Improbable.Worker.CInterop.SchemaCommandResponse?
+  CommandResponseSerialize(global::System.UInt32 componentId,
+                           global::System.UIntPtr userData,
+                           global::System.UIntPtr handle)
+  {
+    try
+    {
+      var _pool = global::Improbable.Worker.Internal.ClientHandles.Instance.GetGcHandlePool(handle);
+    }
+    catch (global::System.Exception e)
+    {
+      global::Improbable.Worker.ClientError.LogClientException(e);
+
+    }
+    return null;
+  }
+
 }
 
 }

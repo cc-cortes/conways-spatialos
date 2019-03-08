@@ -164,7 +164,9 @@ namespace Demo
             var writeAcl = new Improbable.Collections.Map<uint, WorkerRequirementSet>
             {
                 {EntityAcl.ComponentId, workerWriteRequirementSet},
-                {Position.ComponentId, workerWriteRequirementSet}
+                {Position.ComponentId, workerWriteRequirementSet},
+                {Metadata.ComponentId, workerWriteRequirementSet},
+                {Life.ComponentId, workerWriteRequirementSet}
             };
 
             entity.Add(new EntityAcl.Data(readRequirementSet, writeAcl));

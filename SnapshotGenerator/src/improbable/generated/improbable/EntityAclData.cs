@@ -74,36 +74,39 @@ public partial struct EntityAclData : global::System.IEquatable<EntityAclData>, 
 public static class EntityAclData_Internal
 {
   public static unsafe void Write(global::Improbable.Worker.Internal.GcHandlePool _pool,
-                                  EntityAclData _data, global::Improbable.Worker.Internal.Pbio.Object* _obj)
+                           EntityAclData _data, global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     {
-      global::Improbable.WorkerRequirementSet_Internal.Write(_pool, _data.readAcl, global::Improbable.Worker.Internal.Pbio.AddObject(_obj, 1));
+      global::Improbable.WorkerRequirementSet_Internal.Write(_pool, _data.readAcl, _obj.AddObject(1));
     }
-    for (var _node = _data.componentWriteAcl.First; _node != null; _node = _node.Next)
+    if (_data.componentWriteAcl != null)
     {
-      var _pair = global::Improbable.Worker.Internal.Pbio.AddObject(_obj, 2);
+      for (var _node = _data.componentWriteAcl.First; _node != null; _node = _node.Next)
       {
-        global::Improbable.Worker.Internal.Pbio.AddUint32(_pair, 1, _node.Value.Key);
-      }
-      {
-        global::Improbable.WorkerRequirementSet_Internal.Write(_pool, _node.Value.Value, global::Improbable.Worker.Internal.Pbio.AddObject(_pair, 2));
+        var _pair = _obj.AddObject(2);
+        {
+          _pair.AddUint32(1, _node.Value.Key);
+        }
+        {
+          global::Improbable.WorkerRequirementSet_Internal.Write(_pool, _node.Value.Value, _pair.AddObject(2));
+        }
       }
     }
   }
 
-  public static unsafe EntityAclData Read(global::Improbable.Worker.Internal.Pbio.Object* _obj)
+  public static unsafe EntityAclData Read(global::Improbable.Worker.CInterop.SchemaObject _obj)
   {
     EntityAclData _data;
     {
-      _data.readAcl = global::Improbable.WorkerRequirementSet_Internal.Read(global::Improbable.Worker.Internal.Pbio.GetObject(_obj, 1));
+      _data.readAcl = global::Improbable.WorkerRequirementSet_Internal.Read(_obj.GetObject(1));
     }
     {
-      var _count = global::Improbable.Worker.Internal.Pbio.GetObjectCount(_obj, 2);
+      var _count = _obj.GetObjectCount(2);
       _data.componentWriteAcl = new global::Improbable.Collections.Map<uint, global::Improbable.WorkerRequirementSet>((int) _count);
       for (uint _i = 0; _i < _count; ++_i)
       {
-        var _pair = global::Improbable.Worker.Internal.Pbio.IndexObject(_obj, 2, _i);
-        _data.componentWriteAcl.Add(global::Improbable.Worker.Internal.Pbio.GetUint32(_pair, 1), global::Improbable.WorkerRequirementSet_Internal.Read(global::Improbable.Worker.Internal.Pbio.GetObject(_pair, 2)));
+        var _pair = _obj.IndexObject(2, _i);
+        _data.componentWriteAcl.Add(_pair.GetUint32(1), global::Improbable.WorkerRequirementSet_Internal.Read(_pair.GetObject(2)));
       }
     }
     return _data;
