@@ -6,6 +6,7 @@ using Improbable.Worker;
 using Improbable.Collections;
 using Improbable;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Demo
 {
@@ -23,6 +24,12 @@ namespace Demo
         private const string EntityTypeCellDead = "Cell_Dead";
 
         private static Connection WorkerConnection;
+        private struct ViewEntity
+        {
+            public bool hasAuthority;
+            public Entity entity;
+        }
+        private static Dictionary<EntityId, ViewEntity> EntityView = new Dictionary<EntityId, ViewEntity>();
 
         static int Main(string[] arguments)
         {
@@ -35,17 +42,17 @@ namespace Demo
 
             using (var connection = ConnectWorker(workerId, hostName, port))
             {
-                using (var view = new View())
+                using (var dispatcher = new Dispatcher())
                 {
                     IsConnected = true;
 
-                    view.OnDisconnect(op =>
+                    dispatcher.OnDisconnect(op =>
                     {
                         Console.Error.WriteLine("[disconnect] {0}", op.Reason);
                         IsConnected = false;
                     });
 
-                    view.OnLogMessage(op =>
+                    dispatcher.OnLogMessage(op =>
                     {
                         connection.SendLogMessage(op.Level, LoggerName, op.Message);
                         Console.WriteLine("Log Message: {0}", op.Message);
@@ -56,9 +63,94 @@ namespace Demo
                         }
                     });
 
+                    dispatcher.OnAuthorityChange<Life>(op =>
+                    {
+                        ViewEntity entity;
+                        if (EntityView.TryGetValue(op.EntityId, out entity))
+                        {
+                            if(op.Authority == Authority.Authoritative)
+                            {
+                                entity.hasAuthority = true;
+                            }
+                            else if (op.Authority == Authority.NotAuthoritative)
+                            {
+                                entity.hasAuthority = false;
+                            }
+                            else if (op.Authority == Authority.AuthorityLossImminent)
+                            {
+                                entity.hasAuthority = false;
+                            }
+                        }
+                    });
+
+                    dispatcher.OnAddComponent<Life>(op =>
+                    {
+                        ViewEntity entity;
+                        if (EntityView.TryGetValue(op.EntityId, out entity))
+                        {
+                            entity.entity.Add<Life>(op.Data);
+                        }
+                        else
+                        {
+                            ViewEntity newEntity = new ViewEntity();
+                            EntityView.Add(op.EntityId, newEntity);
+                            newEntity.entity.Add<Life>(op.Data);
+                        }
+                    });
+
+                    dispatcher.OnComponentUpdate<Life>(op=>
+                    {
+                        ViewEntity entity;
+                        if (EntityView.TryGetValue(op.EntityId, out entity))
+                        {
+                            var update = op.Update.Get();
+                            entity.entity.Update<Life>(update);
+                        }
+                    });
+                    dispatcher.OnAddComponent<Neighbors>(op =>
+                    {
+                        ViewEntity entity;
+                        if (EntityView.TryGetValue(op.EntityId, out entity))
+                        {
+                            entity.entity.Add<Neighbors>(op.Data);
+                        }
+                        else
+                        {
+                            ViewEntity newEntity = new ViewEntity();
+                            EntityView.Add(op.EntityId, newEntity);
+                            newEntity.entity.Add<Neighbors>(op.Data);
+                        }
+                    });
+
+                    dispatcher.OnComponentUpdate<Neighbors>(op =>
+                    {
+                        ViewEntity entity;
+                        if (EntityView.TryGetValue(op.EntityId, out entity))
+                        {
+                            var update = op.Update.Get();
+                            entity.entity.Update<Neighbors>(update);
+                        }
+                    });
+                    dispatcher.OnAddEntity(op =>
+                    {
+                        //AddEntity will always be followed by OnAddComponent
+                        ViewEntity newEntity = new ViewEntity();
+                        newEntity.hasAuthority = true;
+                        newEntity.entity = new Entity();
+                        ViewEntity oldEntity;
+                        if(!EntityView.TryGetValue(op.EntityId, out oldEntity))
+                        {
+                            EntityView.Add(op.EntityId, newEntity);
+                        }
+                    });
+                    dispatcher.OnRemoveEntity(op =>
+                    {
+                        EntityView.Remove(op.EntityId);
+                    });
+
                     WorkerConnection = connection;
                     WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Worker Connected");
-                    RunEventLoop(connection, view);
+                    RunEventLoop(connection, dispatcher);
                 }    
             }
             return 0;
@@ -90,7 +182,7 @@ namespace Demo
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="view"></param>
-        private static void RunEventLoop(Connection connection, View view)
+        private static void RunEventLoop(Connection connection, Dispatcher dispatcher)
         {
             var maxWait = System.TimeSpan.FromMilliseconds(1000f / FramesPerSecond); //When does QoS hit, are there heartbeat ops that need to go out faster than a second?
             var stopwatch = new System.Diagnostics.Stopwatch();
@@ -100,9 +192,9 @@ namespace Demo
                 stopwatch.Start();
                 var opList = connection.GetOpList(0 /* non-blocking */);
                 // Invoke callbacks.
-                view.Process(opList);
+                dispatcher.Process(opList);
                 // Do other work here...
-                UpdateEntities(view, connection);
+                UpdateEntities(EntityView, connection);
                 stopwatch.Stop();
                 var waitFor = maxWait.Subtract(stopwatch.Elapsed);
                 System.Threading.Thread.Sleep(waitFor.Milliseconds > 0 ? waitFor : System.TimeSpan.Zero);
@@ -113,7 +205,7 @@ namespace Demo
         /// Runs through the current view and sends updates to the entities it has write authority over
         /// </summary>
         /// <param name="view"></param>
-        private static void UpdateEntities(View view, Connection connection)
+        private static void UpdateEntities(Dictionary<EntityId, ViewEntity> view, Connection connection)
         {
             //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Beginning Update Entities");
 
@@ -121,37 +213,35 @@ namespace Demo
             bool canGetAllNeighbors = false;
 
             //Run through every id/entity pair in the view
-            //bool hasNext = true;
-            //var enumerator = view.Entities.GetEnumerator(); //For some reason using the enumerator directly returned EntityID = 0 and Entity = null as first key/value pair
-            foreach (var pair in view.Entities)
+            foreach (var ve in view)
             {
-                EntityId id = pair.Key;
-                Entity e = pair.Value;
-
-                if (e == null)
+                if(ve.Value.hasAuthority) //Only do this update if this worker has write access to the entity
                 {
-                    throw new NullReferenceException("View Entities Enum has returned a null entity for EntityID " + pair.Key.ToString());
-                }
+                    EntityId id = ve.Key;
+                    Entity e = ve.Value.entity;
 
-                //Only do this update if this worker has write access to the entity
-                //Is there a way to determine that this worker has write access to an entity?
-
-                //Only do this if the entity is a Cell type (which should have a Life component)
-                var componentIdSet = e.GetComponentIds();
-                if(componentIdSet.Contains(Life.ComponentId))
-                {
-                    //Get the number of live neighbors
-                    canGetAllNeighbors = TryGetLiveNeighbors(e, view, out liveNeighborCount);
-                    //Update the entity based on the live neighbor count
-                    if (canGetAllNeighbors)
+                    if (e == null)
                     {
-                        UpdateEntity(id, e, liveNeighborCount, connection);
+                        throw new NullReferenceException("View Entities Enum has returned a null entity for EntityID " + ve.Key.ToString());
                     }
-                }
-                else
-                {
-                    WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Life component not present on entity " + id.ToString() + ". update not done.");
-                }
+
+                    //Only do this if the entity is a Cell type (which should have a Life component)
+                    var componentIdSet = e.GetComponentIds();
+                    if (componentIdSet.Contains(Life.ComponentId))
+                    {
+                        //Get the number of live neighbors
+                        canGetAllNeighbors = TryGetLiveNeighbors(id, e, view, out liveNeighborCount);
+                        //Update the entity based on the live neighbor count
+                        if (canGetAllNeighbors)
+                        {
+                            UpdateEntity(id, e, liveNeighborCount, connection);
+                        }
+                    }
+                    else
+                    {
+                        WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Life component not present on entity " + id.ToString() + ". update not done.");
+                    }
+                } 
             }
         }
 
@@ -161,9 +251,9 @@ namespace Demo
         /// <param name="e"></param>
         /// <param name="view"></param>
         /// <returns></returns>
-        private static bool TryGetLiveNeighbors(Entity e, View view, out int LiveNeighborCount)
+        private static bool TryGetLiveNeighbors(EntityId id, Entity e, Dictionary<EntityId, ViewEntity> view, out int LiveNeighborCount)
         {
-            Entity neighbor;
+            ViewEntity neighbor;
             bool canGetLiveNeighbors = true;
             bool hasNeighbor = false;
             int liveNeighbors = 0;
@@ -177,6 +267,7 @@ namespace Demo
             if(!option.HasValue)
             {
                 LiveNeighborCount = 0;
+                WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Neighbors component not present on entity " + id.ToString() + ". update not done.");
                 return canGetLiveNeighbors = false;
             }
 
@@ -188,15 +279,15 @@ namespace Demo
             foreach(Improbable.EntityId neighborId in nd.neighborList)
             {
                 //Get the life value for an entityID
-                hasNeighbor = view.Entities.TryGetValue(neighborId, out neighbor);
+                hasNeighbor = view.TryGetValue(neighborId, out neighbor);
                 if(!hasNeighbor)
                 {
                     //How to get the neighbor if it isn't in the view?
-                    //This should only be for outer edge items, which this worker should only have read and not write
+                    //This should only be for outer edge items, which this worker should only have read and not write permissions on
                     //Although there may be an issue of "View Completeness" in the beginning... so just say no and don't update the entity yet.
                     canGetLiveNeighbors = false;
                 }
-                else if(IsCellAlive(seqId, neighborId, neighbor))
+                else if(IsCellAlive(seqId, neighborId, neighbor.entity))
                 {
                     //What if that cell isn't at that time sequence ID yet?
                     liveNeighbors++;
