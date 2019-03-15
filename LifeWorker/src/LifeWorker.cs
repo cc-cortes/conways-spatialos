@@ -18,7 +18,8 @@ namespace Demo
         private const string LoggerName = "LifeWorker.cs";
         private const int ErrorExitStatus = 1;
         private const uint GetOpListTimeoutInMilliseconds = 100;
-        const int FramesPerSecond = 1;
+        //const int FramesPerSecond = 1;
+        const int SecondsPerFrame = 2;
         private static bool IsConnected;
         private const string EntityTypeCellAlive = "Cell_Alive";
         private const string EntityTypeCellDead = "Cell_Dead";
@@ -184,7 +185,8 @@ namespace Demo
         /// <param name="view"></param>
         private static void RunEventLoop(Connection connection, Dispatcher dispatcher)
         {
-            var maxWait = System.TimeSpan.FromMilliseconds(1000f / FramesPerSecond); //When does QoS hit, are there heartbeat ops that need to go out faster than a second?
+            //var maxWait = System.TimeSpan.FromMilliseconds(1000f / FramesPerSecond);
+            var maxWait = System.TimeSpan.FromMilliseconds(1000f * SecondsPerFrame);
             var stopwatch = new System.Diagnostics.Stopwatch();
             while (IsConnected)
             {
