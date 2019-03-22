@@ -8,8 +8,8 @@
     "layerConfigurations": [
       {
         "layer": "life",
-        "hexGrid": {
-          "numWorkers": 1
+        "entity_id_sharding": {
+          "numWorkers": 2
         }
       }
     ]

@@ -25,12 +25,16 @@ namespace Demo
         private const string EntityTypeCellDead = "Cell_Dead";
 
         private static Connection WorkerConnection;
-        private struct ViewEntity
+        private class ViewEntity
         {
             public bool hasAuthority;
             public Entity entity;
+            public bool hasUpdate;
+            public Life.Update lifeUpdate;
+            public Metadata.Update metadataUpdate;
         }
-        private static Dictionary<EntityId, ViewEntity> EntityView = new Dictionary<EntityId, ViewEntity>();
+        private static Dictionary<EntityId, ViewEntity> EntityView = new Dictionary<EntityId, ViewEntity>(); // THE ALMIGHTY VIEW
+        private static System.Collections.Generic.List<ulong> sequenceIds = new System.Collections.Generic.List<ulong>(); //List of all current Sequence Ids, could probably split this out to a separate class with all the specific methods
 
         static int Main(string[] arguments)
         {
@@ -195,8 +199,18 @@ namespace Demo
                 var opList = connection.GetOpList(0 /* non-blocking */);
                 // Invoke callbacks.
                 dispatcher.Process(opList);
-                // Do other work here...
-                UpdateEntities(EntityView, connection);
+                // Create the list of latest
+                bool performUpdate = TryCreateEntitiesUpdatesAndSequenceIdList(EntityView, connection);
+                if(performUpdate)
+                {
+                    SendAndClearEntitiesUpdates(connection);
+                    ClearSequenceIdList();
+                }
+                else
+                {
+                    ClearEntitiesUpdates();
+                    ClearSequenceIdList();
+                }
                 stopwatch.Stop();
                 var waitFor = maxWait.Subtract(stopwatch.Elapsed);
                 System.Threading.Thread.Sleep(waitFor.Milliseconds > 0 ? waitFor : System.TimeSpan.Zero);
@@ -204,10 +218,118 @@ namespace Demo
         }
 
         /// <summary>
-        /// Runs through the current view and sends updates to the entities it has write authority over
+        /// Runs through the View and if there is an entity then it is sent through the worker connection
+        /// </summary>
+        /// <param name="connection"></param>
+        private static void SendAndClearEntitiesUpdates(Connection connection)
+        {
+            var seqIdList = GetSequenceIdsToUpdate();
+
+            foreach (KeyValuePair<EntityId, ViewEntity> pair in EntityView)
+            {
+                if(pair.Value.hasUpdate)
+                {
+                    //Only update for a given set of current sequence ids
+                    var currSeqId = GetLatestSequenceId(pair.Value.entity);
+                    if(seqIdList.Contains(currSeqId))
+                    {
+                        var id = pair.Key;
+                        var mu = pair.Value.metadataUpdate;
+                        var lu = pair.Value.lifeUpdate;
+
+                        //Send the updates
+                        connection.SendComponentUpdate<Metadata>(id, mu);
+                        connection.SendComponentUpdate<Life>(id, lu);
+                    }
+                    //Reset the bit to remove the update
+                    ClearEntityUpdates(pair.Value);
+                }
+            }
+
+            //TODO: Add list of sequence ids to this printout, as it currently just says "Sequence IDs"
+            WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Component Updates Sent for Sequence IDs " + seqIdList.ToString());
+        }
+
+        /// <summary>
+        /// Clear all updates from the View
+        /// </summary>
+        private static void ClearEntitiesUpdates()
+        {
+            foreach (KeyValuePair<EntityId, ViewEntity> pair in EntityView)
+            {
+                if (pair.Value.hasUpdate)
+                {
+                    ClearEntityUpdates(pair.Value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the set of Sequence IDs to update
+        /// If there are multiple current sequence ids, just perform the updates to get them all to the same id
+        /// If there is one current sequence id, pass it through
+        /// </summary>
+        /// <returns></returns>
+        private static System.Collections.Generic.List<ulong> GetSequenceIdsToUpdate()
+        {
+            System.Collections.Generic.List<ulong> retList = new System.Collections.Generic.List<ulong>();
+
+            // Order the list
+            sequenceIds.Sort();
+
+            int count = sequenceIds.Count;
+            if (count == 1) // If it is length of 1, return the one
+            {
+                retList.Add(sequenceIds[0]);
+            }
+            else if(count > 1) // If it is greater than one, return the lowest n - 1
+            {
+                for(int i = 0; i < (count - 1); i++)
+                {
+                    retList.Add(sequenceIds[i]);
+                }
+            }
+
+            return retList;
+        }
+
+        /// <summary>
+        /// Clear all updates from a single view entity
+        /// </summary>
+        /// <param name="viewEntity"></param>
+        private static void ClearEntityUpdates(ViewEntity viewEntity)
+        {
+            viewEntity.hasUpdate = false;
+            viewEntity.lifeUpdate = null;
+            viewEntity.metadataUpdate = null;
+        }
+
+        /// <summary>
+        /// If it isn't already present, add a sequence id to the list
+        /// </summary>
+        private static void AddSequenceIdToList(ulong id)
+        {
+            if (!sequenceIds.Contains(id))
+            {
+                sequenceIds.Add(id);
+            }
+        }
+
+        /// <summary>
+        /// Clear the list of all current sequence ids
+        /// </summary>
+        private static void ClearSequenceIdList()
+        {
+            sequenceIds.Clear();
+        }
+
+        /// <summary>
+        /// Runs through the current view and creates updates for the entities it has write authority over
+        /// Also fills in the list of all current sequence ids seen
         /// </summary>
         /// <param name="view"></param>
-        private static void UpdateEntities(Dictionary<EntityId, ViewEntity> view, Connection connection)
+        /// <param name="connection">Pass the connection in to log messages, not to send updates</param>
+        private static bool TryCreateEntitiesUpdatesAndSequenceIdList(Dictionary<EntityId, ViewEntity> view, Connection connection)
         {
             //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Beginning Update Entities");
 
@@ -231,12 +353,20 @@ namespace Demo
                     var componentIdSet = e.GetComponentIds();
                     if (componentIdSet.Contains(Life.ComponentId))
                     {
+                        // Add the current sequence id to the list of sequence ids for later selective updating
+                        AddSequenceIdToList(GetLatestSequenceId(e));
+
                         //Get the number of live neighbors
                         canGetAllNeighbors = TryGetLiveNeighbors(id, e, view, out liveNeighborCount);
+                        
                         //Update the entity based on the live neighbor count
                         if (canGetAllNeighbors)
                         {
-                            UpdateEntity(id, e, liveNeighborCount, connection);
+                            CreateEntityUpdates(id, e, liveNeighborCount, connection);
+                        }
+                        else
+                        {
+                            return false; //If all neighbors can't be retrieved then the entity can't be updated. If one entity can't be updated then none can.
                         }
                     }
                     else
@@ -245,6 +375,8 @@ namespace Demo
                     }
                 } 
             }
+
+            return true; //All neighbors were successfully collected and updates successfully created
         }
 
         /// <summary>
@@ -292,6 +424,7 @@ namespace Demo
                 else if(IsCellAlive(seqId, neighborId, neighbor.entity))
                 {
                     //What if that cell isn't at that time sequence ID yet?
+                    // TODO: Make TryGet and fail if the neighbor doesn't have the sequence id
                     liveNeighbors++;
                 }
             }
@@ -359,7 +492,7 @@ namespace Demo
         /// Update an entity based on the rules of Conways Game of Life
         /// </summary>
         /// <param name="e">The entity to update</param>
-        private static void UpdateEntity(EntityId id, Entity e, int LiveNeighborCount, Connection connection)
+        private static void CreateEntityUpdates(EntityId id, Entity e, int LiveNeighborCount, Connection connection)
         {
             //Get Current life state of the entity
             bool isAlive = IsCellAlive(GetLatestSequenceId(e), id, e);
@@ -382,15 +515,15 @@ namespace Demo
             }
 
             //Set new current state
-            UpdateLifeComponent(connection, id, e, isAliveNextState);
+            CreateComponentUpdates(connection, id, e, isAliveNextState);
         }
 
         /// <summary>
-        /// Update the Life component to the provided next state
+        /// Create Updates for the Life and metadata components to the provided next state
         /// </summary>
         /// <param name="e"></param>
         /// <param name="isAliveNextState"></param>
-        private static void UpdateLifeComponent(Connection connection, EntityId id, Entity e, bool isAliveNextState)
+        private static void CreateComponentUpdates(Connection connection, EntityId id, Entity e, bool isAliveNextState)
         {
             ulong curSequenceId = GetLatestSequenceId(e);
             bool curIsAlive = IsCellAlive(curSequenceId, id, e);
@@ -417,10 +550,14 @@ namespace Demo
             lu.SetCurIsAlive(isAliveNextState);
             lu.SetCurSequenceId(curSequenceId + 1);
 
-            //Send the updates
-            connection.SendComponentUpdate<Metadata>(id, mu);
-            connection.SendComponentUpdate<Life>(id, lu);
-            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "UpdateLifeComponent: Life Component Updated for Entity " + id.ToString() + " to sequence id: " + curSequenceId + " and isAlive: " + isAliveNextState.ToString());
+            //Add to the view
+            ViewEntity viewEntity;
+            if(EntityView.TryGetValue(id, out viewEntity))
+            {
+                viewEntity.hasUpdate = true;
+                viewEntity.metadataUpdate = mu;
+                viewEntity.lifeUpdate = lu;
+            }
         }
     }
 }
