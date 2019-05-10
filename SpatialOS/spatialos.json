@@ -5,5 +5,5 @@
   "serverWorkers": [
     "../LifeWorker/life_worker.json"
   ],
-  "launchConfig": "./deployment.json"
+  "launchConfiguration": "./deployment.json"
 }

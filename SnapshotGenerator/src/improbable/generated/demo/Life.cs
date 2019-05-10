@@ -185,8 +185,8 @@ public partial class Life : global::Improbable.Worker.IComponentMetaclass
     get
     {
       unsafe
-      { 
-        var vtable = new global::Improbable.Worker.CInterop.ComponentVtable 
+      {
+        var vtable = new global::Improbable.Worker.CInterop.ComponentVtable
         {
           ComponentId = ComponentId,
           UserData = global::System.UIntPtr.Zero,

@@ -246,8 +246,8 @@ namespace Demo
                 }
             }
 
-            //TODO: Add list of sequence ids to this printout, as it currently just says "Sequence IDs"
-            WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Component Updates Sent for Sequence IDs " + seqIdList.ToString());
+            //TODO: Add list of sequence ids to this printout, as it currently just says "Sequence IDs" as the ToString output
+            //WorkerConnection.SendLogMessage(LogLevel.Info, "LifeWorker", "Component Updates Sent for Sequence IDs " + seqIdList.ToString());
         }
 
         /// <summary>
