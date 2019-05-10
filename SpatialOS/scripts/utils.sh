@@ -7,7 +7,7 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )"
 
 SDK_VERSION="13.7.1"
 
-WORKER_DIRS=("$(pwd)/../../LifeWorker" "$(pwd)/../../SnapshotGenerator" "$(pwd)/../../WindowsClient")
+WORKER_DIRS=("$(pwd)/../../LifeWorker" "$(pwd)/../../SnapshotGenerator" "$(pwd)/../../Client")
 TOOLS_DIR="$(pwd)/../tools/${SDK_VERSION}"
 LIB_DIR="$(pwd)/../lib/${SDK_VERSION}"
 SCHEMA_DIR="$(pwd)/../schema"

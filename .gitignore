@@ -17,3 +17,4 @@ OtherWorkers/DiceWorker/src/improbable/
 /LifeWorker/bin
 /LifeWorker/src/obj/x64
 /SnapshotGenerator/src/bin/x64/DebugLinux
+/Client/src/Client/.vs/Client/v16
